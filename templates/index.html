@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Startup Idea Analyzer</title>
+
+  <!-- Google Fonts: Inter (body) + Instrument Serif (display headings) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset & base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #f9f7f4;
+      --surface:     #ffffff;
+      --border:      #e4e0da;
+      --border-mid:  #ccc8c1;
+      --text-primary:   #1a1917;
+      --text-secondary: #5c5752;
+      --text-muted:     #9b9590;
+      --accent:         #2d6a4f;   /* forest green */
+      --accent-hover:   #245c43;
+      --accent-light:   #eaf2ee;
+      --accent-ring:    rgba(45, 106, 79, 0.22);
+      --error-bg:    #fef2f2;
+      --error-border:#fca5a5;
+      --error-text:  #991b1b;
+      --warn-bg:     #fffbeb;
+      --warn-border: #fcd34d;
+      --warn-text:   #92400e;
+      --radius-sm:   6px;
+      --radius:      10px;
+      --radius-lg:   16px;
+      --shadow-sm:   0 1px 2px rgba(0,0,0,.05);
+      --shadow:      0 2px 8px rgba(0,0,0,.07), 0 0 0 1px rgba(0,0,0,.03);
+      --shadow-lg:   0 8px 24px rgba(0,0,0,.09), 0 0 0 1px rgba(0,0,0,.04);
+      --font-sans:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-serif:  'Instrument Serif', Georgia, 'Times New Roman', serif;
+      --transition:  150ms ease;
+    }
+
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ─── Layout ────────────────────────────────────────────────────── */
+    .page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ─── Header ────────────────────────────────────────────────────── */
+    .site-header {
+      padding: 28px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+      margin-bottom: 56px;
+    }
+
+    .site-logo {
+      font-family: var(--font-sans);
+      font-size: .875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -.01em;
+      text-decoration: none;
+    }
+
+    .site-logo span {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-left: 5px;
+      vertical-align: middle;
+      position: relative;
+      top: -1px;
+    }
+
+    /* ─── Hero ──────────────────────────────────────────────────────── */
+    .hero {
+      margin-bottom: 44px;
+    }
+
+    .hero-eyebrow {
+      font-size: .75rem;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 5vw, 2.75rem);
+      font-weight: 400;
+      line-height: 1.2;
+      letter-spacing: -.02em;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--text-secondary);
+    }
+
+    .hero p {
+      font-size: 1.0625rem;
+      color: var(--text-secondary);
+      max-width: 520px;
+      line-height: 1.65;
+    }
+
+    /* ─── Setup notice ──────────────────────────────────────────────── */
+    .notice {
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      border: 1px solid;
+      font-size: .875rem;
+      line-height: 1.55;
+      margin-bottom: 32px;
+    }
+
+    .notice--warn {
+      background: var(--warn-bg);
+      border-color: var(--warn-border);
+      color: var(--warn-text);
+    }
+
+    .notice strong { font-weight: 600; }
+
+    code {
+      font-family: 'SF Mono', 'Fira Mono', 'Consolas', monospace;
+      font-size: .8125rem;
+      background: rgba(0,0,0,.06);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    /* ─── Error banner ──────────────────────────────────────────────── */
+    .error-banner {
+      display: none;
+      padding: 14px 18px;
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      border-radius: var(--radius);
+      font-size: .875rem;
+      color: var(--error-text);
+      margin-bottom: 28px;
+      line-height: 1.55;
+    }
+
+    .error-banner.visible { display: flex; align-items: flex-start; gap: 10px; }
+
+    .error-banner__body { flex: 1; }
+    .error-banner__title { font-weight: 600; margin-bottom: 2px; }
+
+    .error-banner__dismiss {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--error-text);
+      opacity: .6;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 0;
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: opacity var(--transition);
+    }
+    .error-banner__dismiss:hover { opacity: 1; }
+
+    /* ─── Form card ─────────────────────────────────────────────────── */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 36px;
+      margin-bottom: 40px;
+    }
+
+    @media (max-width: 500px) {
+      .form-card { padding: 24px 20px; }
+    }
+
+    .form-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .form-label__text {
+      font-size: .875rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .char-count {
+      font-size: .75rem;
+      color: var(--text-muted);
+    }
+
+    .form-textarea {
+      width: 100%;
+      min-height: 148px;
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border-mid);
+      border-radius: var(--radius);
+      font-family: var(--font-sans);
+      font-size: .9375rem;
+      color: var(--text-primary);
+      line-height: 1.6;
+      resize: vertical;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      outline: none;
+    }
+
+    .form-textarea::placeholder { color: var(--text-muted); }
+
+    .form-textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-ring);
+    }
+
+    /* Examples row */
+    .examples-row {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .examples-label {
+      font-size: .75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .example-chip {
+      font-size: .75rem;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-light);
+      border: 1px solid rgba(45, 106, 79, .18);
+      border-radius: 100px;
+      padding: 4px 12px;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .example-chip:hover {
+      background: #d8ecdf;
+      border-color: rgba(45, 106, 79, .32);
+    }
+
+    /* Submit button */
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px 24px;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: .9375rem;
+      font-weight: 500;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background var(--transition), box-shadow var(--transition), opacity var(--transition);
+      letter-spacing: -.01em;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      box-shadow: 0 2px 12px rgba(45, 106, 79, .28);
+    }
+
+    .btn-primary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .btn-primary:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+      flex-shrink: 0;
+    }
+
+    .spinner.visible { display: block; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Loading indicator (below form) ───────────────────────────── */
+    .loading-state {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 20px 0 8px;
+      color: var(--text-secondary);
+      font-size: .875rem;
+    }
+
+    .loading-state.visible { display: flex; }
+
+    .loading-state__dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .loading-state__dot:nth-child(2) { animation-delay: .2s; }
+    .loading-state__dot:nth-child(3) { animation-delay: .4s; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: .25; transform: scale(.85); }
+      50%       { opacity: 1;   transform: scale(1.05); }
+    }
+
+    /* ─── Results ───────────────────────────────────────────────────── */
+    .results {
+      display: none;
+      animation: fadeUp .35s ease-out both;
+    }
+
+    .results.visible { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .results-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .results-title {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 400;
+      letter-spacing: -.015em;
+      color: var(--text-primary);
+    }
+
+    .results-meta {
+      font-size: .75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+
+    /* Score badge */
+    .score-badge {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 3px;
+      padding: 5px 13px;
+      border-radius: 100px;
+      font-size: .8125rem;
+      font-weight: 600;
+      letter-spacing: .01em;
+    }
+
+    .score-badge .score-num {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .score-badge--low    { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }
+    .score-badge--mid    { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
+    .score-badge--high   { background: var(--accent-light); color: var(--accent); border: 1px solid rgba(45,106,79,.25); }
+
+    /* Section */
+    .result-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 28px 32px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 500px) {
+      .result-section { padding: 22px 20px; }
+    }
+
+    .result-section__label {
+      font-size: .6875rem;
+      font-weight: 600;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .result-section__body {
+      font-size: .9375rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .result-section__body p { margin-bottom: .5em; }
+    .result-section__body p:last-child { margin-bottom: 0; }
+
+    .result-section__body ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .result-section__body li {
+      padding-left: 18px;
+      position: relative;
+    }
+
+    .result-section__body li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: .6em;
+      width: 5px;
+      height: 5px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    /* Summary block – slightly elevated */
+    .result-summary {
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin-bottom: 24px;
+    }
+
+    .result-summary__label {
+      font-size: .6875rem;
+      font-weight: 600;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .result-summary__body {
+      font-size: 1rem;
+      color: var(--text-primary);
+      line-height: 1.7;
+    }
+
+    /* Two-column row */
+    .result-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 560px) {
+      .result-row { grid-template-columns: 1fr; }
+    }
+
+    /* Score card */
+    .score-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 24px 32px;
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    @media (max-width: 500px) {
+      .score-card {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px;
+      }
+    }
+
+    .score-card__label {
+      font-size: .875rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .score-card__sub {
+      font-size: .8125rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .score-card__right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .score-display {
+      font-family: var(--font-serif);
+      font-size: 2.5rem;
+      font-weight: 400;
+      line-height: 1;
+      color: var(--text-primary);
+    }
+
+    .score-display span {
+      font-family: var(--font-sans);
+      font-size: .9rem;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+
+    /* Score bar */
+    .score-bar-wrap {
+      width: 120px;
+      height: 5px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width .5s ease-out .1s;
+    }
+
+    .score-bar-fill--low  { background: #ef4444; }
+    .score-bar-fill--mid  { background: #f59e0b; }
+    .score-bar-fill--high { background: var(--accent); }
+
+    /* ─── Footer ────────────────────────────────────────────────────── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      margin-top: 60px;
+      padding: 24px 0 32px;
+      text-align: center;
+      font-size: .8125rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* ─── Utility ───────────────────────────────────────────────────── */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+<div class="page-wrap">
+
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <header class="site-header" role="banner">
+    <a href="/" class="site-logo" aria-label="Startup Idea Analyzer home">
+      Startup Idea Analyzer<span aria-hidden="true"></span>
+    </a>
+  </header>
+
+  <!-- ── Hero ───────────────────────────────────────────────────────── -->
+  <section class="hero" aria-labelledby="hero-heading">
+    <p class="hero-eyebrow">Idea Validation</p>
+    <h1 id="hero-heading">Is your startup idea<br><em>worth pursuing?</em></h1>
+    <p>Evaluate your idea, understand the market, and identify your next steps.</p>
+  </section>
+
+  <!-- ── API key notice (only when no key is configured) ─────────────── -->
+  {% if not has_api_key %}
+  <div class="notice notice--warn" role="alert">
+    <strong>Configuration needed —</strong> add <code>GEMINI_API_KEY</code> or <code>OPENROUTER_API_KEY</code>
+    to your <code>.env</code> file to enable analysis.
+  </div>
+  {% endif %}
+
+  <!-- ── Error banner ───────────────────────────────────────────────── -->
+  <div id="errorBanner" class="error-banner" role="alert" aria-live="assertive">
+    <div class="error-banner__body">
+      <p class="error-banner__title">Analysis unavailable</p>
+      <p id="errorMessage"></p>
+    </div>
+    <button class="error-banner__dismiss" onclick="dismissError()" aria-label="Dismiss error">&times;</button>
+  </div>
+
+  <!-- ── Form ───────────────────────────────────────────────────────── -->
+  <main id="main-content">
+    <div class="form-card">
+      <form id="ideaForm" novalidate>
+        <div class="form-label">
+          <label class="form-label__text" for="startupIdea">Describe your idea</label>
+          <span id="charCount" class="char-count" aria-live="polite"></span>
+        </div>
+
+        <textarea
+          id="startupIdea"
+          name="idea"
+          class="form-textarea"
+          rows="6"
+          placeholder="What problem does it solve? Who is it for? What makes it different?"
+          aria-describedby="charCount"
+          autocomplete="off"
+          spellcheck="true"
+        ></textarea>
+
+        <div class="examples-row" aria-label="Example ideas">
+          <span class="examples-label">Try an example:</span>
+          <button type="button" class="example-chip" onclick="fillExample(1)">Farm-to-Baker Marketplace</button>
+          <button type="button" class="example-chip" onclick="fillExample(2)">AI Code Tutor for Kids</button>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-primary">
+          <span class="spinner" id="btnSpinner" aria-hidden="true"></span>
+          <span id="btnText">Analyze my idea</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Loading state -->
+    <div id="loadingState" class="loading-state" aria-live="polite" aria-label="Analyzing your idea">
+      <div class="loading-state__dot"></div>
+      <div class="loading-state__dot"></div>
+      <div class="loading-state__dot"></div>
+      <span>Reviewing your idea…</span>
+    </div>
+
+    <!-- ── Results ─────────────────────────────────────────────────── -->
+    <section id="resultsContainer" class="results" aria-labelledby="results-heading" aria-live="polite">
+
+      <div class="results-header">
+        <h2 class="results-title" id="results-heading">Analysis</h2>
+        <span class="results-meta">Startup Report</span>
+      </div>
+
+      <!-- Executive summary -->
+      <div class="result-summary">
+        <p class="result-summary__label">Summary</p>
+        <p id="overallAssessment" class="result-summary__body"></p>
+      </div>
+
+      <!-- Uniqueness + Competition side by side -->
+      <div class="result-row">
+        <div class="result-section">
+          <p class="result-section__label">Uniqueness</p>
+          <div id="uniqueness" class="result-section__body"></div>
+        </div>
+        <div class="result-section">
+          <p class="result-section__label">Competition</p>
+          <div id="competition" class="result-section__body"></div>
+        </div>
+      </div>
+
+      <!-- Go-to-market -->
+      <div class="result-section">
+        <p class="result-section__label">Go-to-Market Strategy</p>
+        <div id="goToMarketStrategy" class="result-section__body"></div>
+      </div>
+
+      <!-- Feasibility score -->
+      <div class="score-card">
+        <div>
+          <p class="score-card__label">Feasibility Score</p>
+          <p id="scoreLabel" class="score-card__sub"></p>
+        </div>
+        <div class="score-card__right">
+          <div>
+            <div class="score-bar-wrap">
+              <div id="scoreBar" class="score-bar-fill" style="width:0%"></div>
+            </div>
+          </div>
+          <p class="score-display" id="scoreDisplay">
+            <span id="scoreVal">–</span><span>/10</span>
+          </p>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ── Footer ─────────────────────────────────────────────────────── -->
+  <footer class="site-footer" role="contentinfo">
+    <p>Your idea and API key are never stored or shared.</p>
+  </footer>
+
+</div><!-- /page-wrap -->
+
+<!-- ── JavaScript ─────────────────────────────────────────────────── -->
+<script>
+  // ── DOM refs ──────────────────────────────────────────────────────
+  const form             = document.getElementById('ideaForm');
+  const textarea         = document.getElementById('startupIdea');
+  const charCount        = document.getElementById('charCount');
+  const submitBtn        = document.getElementById('submitBtn');
+  const btnText          = document.getElementById('btnText');
+  const btnSpinner       = document.getElementById('btnSpinner');
+  const loadingState     = document.getElementById('loadingState');
+  const resultsContainer = document.getElementById('resultsContainer');
+  const errorBanner      = document.getElementById('errorBanner');
+  const errorMessage     = document.getElementById('errorMessage');
+
+  // ── Char counter ──────────────────────────────────────────────────
+  textarea.addEventListener('input', updateCharCount);
+
+  function updateCharCount() {
+    const n = textarea.value.trim().length;
+    charCount.textContent = n > 0 ? `${n} character${n === 1 ? '' : 's'}` : '';
+  }
+
+  // ── Error banner ──────────────────────────────────────────────────
+  function dismissError() {
+    errorBanner.classList.remove('visible');
+  }
+
+  function showError(msg) {
+    errorMessage.textContent = msg;
+    errorBanner.classList.add('visible');
+    errorBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ── Example chips ─────────────────────────────────────────────────
+  function fillExample(num) {
+    if (num === 1) {
+      textarea.value = "A hyper-local B2B mobile marketplace connecting organic farmers with craft bakeries and restaurants. The platform handles batch ordering, harvest forecasting, and refrigerated routing to eliminate wholesale markups.";
+    } else {
+      textarea.value = "An AI-powered interactive coding playground for kids aged 8–14. It turns Python logic into animated stories and gamified puzzle battles, with real-time audio hints when they get stuck.";
+    }
+    updateCharCount();
+    textarea.focus();
+  }
+
+  // ── Loading state helpers ─────────────────────────────────────────
+  function setLoading(on) {
+    submitBtn.disabled = on;
+    btnSpinner.classList.toggle('visible', on);
+    btnText.textContent = on ? 'Analyzing…' : 'Analyze my idea';
+    loadingState.classList.toggle('visible', on);
+    if (on) resultsContainer.classList.remove('visible');
+  }
+
+  // ── Form submit ───────────────────────────────────────────────────
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    dismissError();
+
+    const idea = textarea.value.trim();
+    if (idea.length < 10) {
+      showError('Please add a bit more detail about your idea (at least 10 characters).');
+      textarea.focus();
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idea }),
+      });
+
+      let data = null;
+      try {
+        data = await response.json();
+      } catch {
+        showError('The server returned an unexpected response. Please try again.');
+        return;
+      }
+
+      if (!response.ok || !data || !data.success) {
+        showError((data && data.error) || "We couldn't complete the analysis. Please try again.");
+        return;
+      }
+
+      renderResults(data.data);
+
+    } catch {
+      showError('Unable to reach the server. Check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // ── Render results ────────────────────────────────────────────────
+  function renderResults(res) {
+    // Summary
+    document.getElementById('overallAssessment').textContent = res.overallAssessment || '';
+
+    // Text sections
+    setSection('uniqueness',  res.uniqueness);
+    setSection('competition', res.competition);
+
+    // Go-to-market: detect bullet lists
+    const gtmEl   = document.getElementById('goToMarketStrategy');
+    const gtmText = (res.goToMarketStrategy || '').trim();
+    const lines   = gtmText.split('\n').map(l => l.replace(/^[-*•]\s*/, '').trim()).filter(Boolean);
+
+    if (lines.length > 1) {
+      const ul = document.createElement('ul');
+      lines.forEach(txt => {
+        const li = document.createElement('li');
+        li.textContent = txt;
+        ul.appendChild(li);
+      });
+      gtmEl.innerHTML = '';
+      gtmEl.appendChild(ul);
+    } else {
+      gtmEl.textContent = gtmText;
+    }
+
+    // Feasibility score
+    const score  = Math.max(1, Math.min(10, parseInt(res.feasibilityScore) || 7));
+    const tier   = score <= 3 ? 'low' : score <= 6 ? 'mid' : 'high';
+    const labels = { low: 'Low feasibility — proceed with caution', mid: 'Moderate feasibility — validate carefully', high: 'Strong feasibility — good potential' };
+
+    document.getElementById('scoreVal').textContent      = score;
+    document.getElementById('scoreLabel').textContent    = labels[tier];
+    document.getElementById('scoreBar').style.width      = `${score * 10}%`;
+    document.getElementById('scoreBar').className        = `score-bar-fill score-bar-fill--${tier}`;
+
+    resultsContainer.classList.add('visible');
+    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function setSection(id, text) {
+    const el = document.getElementById(id);
+    el.textContent = (text || '').trim();
+  }
+</script>
+</body>
+</html>
